@@ -8,6 +8,106 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+void loadHeights(int *nheights, char *name)
+{
+    using namespace std;
+    ifstream infile;
+    
+    infile.open(name, ios::in);
+    
+    if (!infile)
+    {
+        printf("%s is not a valid input file!\n", name);
+        exit(1);
+    }
+    
+    printf("Loading heights from file '%s'... ", name);
+    int hcount = 0;
+    while (infile && hcount < 64)
+    {
+        string strIn;
+        infile >> strIn;
+        nheights[hcount] = atoi(strIn.c_str());
+        ++hcount;
+    }
+    printf("Done!\n");
+}
+
+void loadMesh(int **mesh, int *nheights)
+{
+    printf("Creating mesh points... ");
+    for (int i = 0; i < 64; ++i)
+        mesh[i] = (int *)malloc(sizeof(int) * 3);
+    
+    if (mesh == NULL)
+    {
+        puts("Malloc failed");
+        exit(1);
+    }
+    
+    for (int a = 0; a < 8; ++a)
+    {
+        for (int b = 0; b < 8; ++b)
+        {
+            mesh[a * 8 + b][0] = 50 * a - 175;
+            mesh[a * 8 + b][1] = 50 * b - 175;
+            mesh[a * 8 + b][2] = nheights[b * 8 + a] / 2 - 150;
+        }
+    }
+    printf("Done!\n");
+}
+
+void loadConnections(int **connect)
+{
+    printf("Generating line coordinates... ");
+    for (int i = 0; i < 112; ++i)
+        connect[i] = (int *)malloc(sizeof(int) * 2);
+    
+    for (int a = 0, it = 0; a < 8; ++a)
+    {
+        for (int b = 0; b < 8; ++b)
+        {
+            if (b - 1 >= 0)
+            {
+                connect[it][0] = (a * 8) + b - 1;
+                connect[it][1] = (a * 8) + b;
+                ++it;
+            }
+            if (a - 1 >= 0)
+            {
+                connect[it][0] = ((a - 1) * 8) + b;
+                connect[it][1] = (a * 8) + b;
+                ++it;
+            }
+        }
+    }
+    printf("Done!\n");
+}
+
+void getCoords(int *coords, int **mesh, int **connect, int l, int rot, float inclination)
+{
+    float x1, y1, z1, x2, y2, z2, rx1, ry1, rx2, ry2;
+    
+    x1 = mesh[connect[l][0]][0];
+    y1 = mesh[connect[l][0]][1];
+    z1 = mesh[connect[l][0]][2];
+    x2 = mesh[connect[l][1]][0];
+    y2 = mesh[connect[l][1]][1];
+    z2 = mesh[connect[l][1]][2];
+    
+    float a = rot/10.0 * M_PI / 180;
+    float sa = sin(a), ca = cos(a);
+    rx1 = x1 * ca - y1 * sa;
+    ry1 = x1 * sa + y1 * ca;
+    rx2 = x2 * ca - y2 * sa;
+    ry2 = x2 * sa + y2 * ca;
+    
+    coords[0] = inclination * rx1 - inclination * ry1 + SCREEN_WIDTH / 2;
+    coords[1] = (1 - inclination) * rx1 + (1 - inclination) * ry1 - z1 + SCREEN_HEIGHT / 5;
+    coords[2] = inclination * rx2 - inclination * ry2 + SCREEN_WIDTH / 2;
+    coords[3] = (1 - inclination) * rx2 + (1 - inclination) * ry2 - z2 + SCREEN_HEIGHT / 5;
+}
+
 int main( int argc, char** args )
 {
     using namespace std;
@@ -23,28 +123,17 @@ int main( int argc, char** args )
         exit(1);
     }
     
-    ifstream infile;
-    infile.open(args[1], ios::in);
-    
     int nheights[64];
+    loadHeights(nheights, args[1]);
     
-    if (!infile)
-    {
-        printf("That's not a valid input file!\n");
-        exit(1);
-    }
+    int **mesh = (int **)malloc(sizeof(int *) * 64);
+    loadMesh(mesh, nheights);
     
-    int hcount = 0;
-    while (infile && hcount < 64)
-    {
-        string strIn;
-        infile >> strIn;
-        nheights[hcount] = atoi(strIn.c_str());
-        ++hcount;
-        cout << strIn << endl;
-    }
+    int lines = 112;
+    int **connect = (int **)malloc(sizeof(int *) * lines);
+    loadConnections(connect);
     
-    printf("Now running...\n");
+    printf("Now running SDL...\n");
     
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
     {
@@ -62,54 +151,8 @@ int main( int argc, char** args )
         {
             renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
             
-            int **mesh = (int **)malloc(sizeof(int *) * 64);
-            for (int i = 0; i < 64; ++i)
-                mesh[i] = (int *)malloc(sizeof(int) * 3);
-            
-            if (mesh == NULL)
-            {
-                puts("Malloc failed");
-                exit(1);
-            }
-            
-            for (int a = 0; a < 8; ++a)
-            {
-                for (int b = 0; b < 8; ++b)
-                {
-                    mesh[a * 8 + b][0] = 50 * a - 175;
-                    mesh[a * 8 + b][1] = 50 * b - 175;
-                    printf("Height: %d\n", nheights[b * 8 + a] / 2 - 150);
-                    mesh[a * 8 + b][2] = nheights[b * 8 + a] / 2 - 150;
-                }
-            }
-            
-            int lines = 112;
-            int **connect = (int **)malloc(sizeof(int *) * lines);
-            for (int i = 0; i < 112; ++i)
-                connect[i] = (int *)malloc(sizeof(int) * 2);
-            
-            for (int a = 0, it = 0; a < 8; ++a)
-            {
-                for (int b = 0; b < 8; ++b)
-                {
-                    if (b - 1 >= 0)
-                    {
-                        connect[it][0] = (a * 8) + b - 1;
-                        connect[it][1] = (a * 8) + b;
-                        ++it;
-                    }
-                    if (a - 1 >= 0)
-                    {
-                        connect[it][0] = ((a - 1) * 8) + b;
-                        connect[it][1] = (a * 8) + b;
-                        ++it;
-                    }
-                }
-            }
-            
             SDL_Event e;
             bool quit = false;
-            float x1, y1, z1, x2, y2, z2, rx1, ry1, rx2, ry2, ox1, oy1, ox2, oy2;
             int rot = 0;
             while (!quit){
                 while (SDL_PollEvent(&e)){
@@ -121,11 +164,11 @@ int main( int argc, char** args )
                         switch( e.key.keysym.sym )
                         {
                             case SDLK_LEFT:
-                                rot -= 10;
+                                rot -= 20;
                                 break;
                                 
                             case SDLK_RIGHT:
-                                rot += 10;
+                                rot += 20;
                                 break;
                                 
                             case SDLK_q:
@@ -140,31 +183,14 @@ int main( int argc, char** args )
                 
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
                 SDL_RenderClear(renderer);
-                SDL_SetRenderDrawColor(renderer, i % 255, (i + 85) % 255, (i + 170) % 255, 0xFF);
+                SDL_SetRenderDrawColor(renderer, 0x0, 0xFF, 0x0, 0xFF);
                 
                 for (int l = 0; l < lines; ++l)
                 {
-                    x1 = mesh[connect[l][0]][0];
-                    y1 = mesh[connect[l][0]][1];
-                    z1 = mesh[connect[l][0]][2];
-                    x2 = mesh[connect[l][1]][0];
-                    y2 = mesh[connect[l][1]][1];
-                    z2 = mesh[connect[l][1]][2];
+                    int coords[4];
+                    getCoords(coords, mesh, connect, l, rot, inclination);
                     
-                    float a = rot/10.0 * M_PI / 180;
-                    float sa = sin(a);
-                    float ca = cos(a);
-                    rx1 = x1 * ca - y1 * sa;
-                    ry1 = x1 * sa + y1 * ca;
-                    rx2 = x2 * ca - y2 * sa;
-                    ry2 = x2 * sa + y2 * ca;
-                    
-                    ox1 = inclination * rx1 - inclination * ry1 + SCREEN_WIDTH / 2;
-                    oy1 = (1 - inclination) * rx1 + (1 - inclination) * ry1 - z1 + SCREEN_HEIGHT / 5;
-                    ox2 = inclination * rx2 - inclination * ry2 + SCREEN_WIDTH / 2;
-                    oy2 = (1 - inclination) * rx2 + (1 - inclination) * ry2 - z2 + SCREEN_HEIGHT / 5;
-                   
-                    SDL_RenderDrawLine(renderer, ox1, oy1, ox2, oy2);
+                    SDL_RenderDrawLine(renderer, coords[0], coords[1], coords[2], coords[3]);
                 }
                 // SDL_RenderDrawLine(renderer, 10, 10, 100 + i, 100 );
                 SDL_RenderPresent(renderer);
@@ -185,6 +211,8 @@ int main( int argc, char** args )
     SDL_DestroyWindow( window );
     
     SDL_Quit();
+    
+    printf("Exited normally\n");
     
     return 0;
 }
