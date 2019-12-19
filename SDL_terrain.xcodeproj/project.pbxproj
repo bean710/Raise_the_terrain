@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		B5D185ED23A8CA6C00318AEE /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B5D185EC23A8CA6C00318AEE /* main.cpp */; };
 		B5D185F523A8CAA000318AEE /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5D185F423A8CAA000318AEE /* SDL2.framework */; };
+		B5D1860023AB110900318AEE /* loading.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B5D185FE23AB110900318AEE /* loading.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,7 +28,8 @@
 		B5D185E923A8CA6C00318AEE /* SDL_terrain */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SDL_terrain; sourceTree = BUILT_PRODUCTS_DIR; };
 		B5D185EC23A8CA6C00318AEE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B5D185F423A8CAA000318AEE /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
-		B5D185FC23A9FFCD00318AEE /* cube.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cube.cp; sourceTree = "<group>"; };
+		B5D185FE23AB110900318AEE /* loading.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = loading.cpp; sourceTree = "<group>"; };
+		B5D185FF23AB110900318AEE /* loading.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = loading.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,7 +65,8 @@
 			isa = PBXGroup;
 			children = (
 				B5D185EC23A8CA6C00318AEE /* main.cpp */,
-				B5D185FC23A9FFCD00318AEE /* cube.cp */,
+				B5D185FE23AB110900318AEE /* loading.cpp */,
+				B5D185FF23AB110900318AEE /* loading.hpp */,
 			);
 			path = SDL_terrain;
 			sourceTree = "<group>";
@@ -132,6 +135,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5D1860023AB110900318AEE /* loading.cpp in Sources */,
 				B5D185ED23A8CA6C00318AEE /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
