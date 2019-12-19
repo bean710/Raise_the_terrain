@@ -1,19 +1,48 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 #include <math.h>
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-int main( int argc, char* args[] )
+int main( int argc, char** args )
 {
+    using namespace std;
     SDL_Window* window = NULL;
     SDL_Renderer *renderer = NULL;
     
     int i = 0;
     float inclination = 0.7;
     
-    int heights[64] = {120, 60, 40, 60, 20, -20, -80, -120, 40, 20, 30, 30, -10, -40, -90, -110, 20, 30, 10, 06, -6, -20, -26, -90, 00, -6, 10, 10, -6, -20, -20, -40, -20, -20, -18, -14, -40, -20, -20, -30, -10, -10, -10, -10, -8, -20, -20, -30, 20, 10, 10, 10, 10, 04, 10, -10, 30, 24, 24, 22, 20, 18, 14, 16};
+    if (argc != 2)
+    {
+        printf("Incorrect usage. Usage: terrain file\n");
+        exit(1);
+    }
+    
+    ifstream infile;
+    infile.open(args[1], ios::in);
+    
+    int nheights[64];
+    
+    if (!infile)
+    {
+        printf("That's not a valid input file!\n");
+        exit(1);
+    }
+    
+    int hcount = 0;
+    while (infile && hcount < 64)
+    {
+        string strIn;
+        infile >> strIn;
+        nheights[hcount] = atoi(strIn.c_str());
+        ++hcount;
+        cout << strIn << endl;
+    }
     
     printf("Now running...\n");
     
@@ -49,7 +78,8 @@ int main( int argc, char* args[] )
                 {
                     mesh[a * 8 + b][0] = 50 * a - 175;
                     mesh[a * 8 + b][1] = 50 * b - 175;
-                    mesh[a * 8 + b][2] = heights[b * 8 + a] / 2 - 150;
+                    printf("Height: %d\n", nheights[b * 8 + a] / 2 - 150);
+                    mesh[a * 8 + b][2] = nheights[b * 8 + a] / 2 - 150;
                 }
             }
             
