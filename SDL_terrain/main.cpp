@@ -8,9 +8,9 @@ void checkButtons(SDL_Event *e, bool* quit, int *rot)
         if (e->type == SDL_QUIT){
             *quit = true;
         }
-        else if( e->type == SDL_KEYDOWN )
+        else if(e->type == SDL_KEYDOWN)
         {
-            switch( e->key.keysym.sym )
+            switch(e->key.keysym.sym)
             {
                 case SDLK_LEFT:
                     *rot -= 20;
@@ -31,6 +31,37 @@ void checkButtons(SDL_Event *e, bool* quit, int *rot)
     }
 }
 
+void cleanUp(int **mesh, int **connect)
+{
+    int i;
+    
+    for (i = 0; i < 64; ++i)
+        free(mesh[i]);
+    free(mesh);
+    
+    for (i = 0; i < 112; ++i)
+        free(connect[i]);
+    free(connect);
+}
+
+void render(SDL_Renderer *renderer, int lines, int **mesh, int **connect, int rot, float inclination)
+{
+    int i, coords[4];
+    
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 0x0, 0xFF, 0x0, 0xFF);
+    
+    for (i = 0; i < lines; ++i)
+    {
+        getCoords(coords, mesh, connect, i, rot, inclination);
+        
+        SDL_RenderDrawLine(renderer, coords[0], coords[1], coords[2], coords[3]);
+    }
+    
+    SDL_RenderPresent(renderer);
+}
+
 int main( int argc, char** args )
 {
     using namespace std;
@@ -38,8 +69,8 @@ int main( int argc, char** args )
     SDL_Renderer *renderer = NULL;
     SDL_Event e;
     int **mesh, **connect;
-    int nheights[64], coords[4];
-    int i = 0, lines = 112, rot = 0;
+    int nheights[64];
+    int lines = 112, rot = 0;
     float inclination = 0.7;
     bool quit = false;
     
@@ -59,46 +90,27 @@ int main( int argc, char** args )
     
     printf("Now running SDL...\n");
     
-    if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+    if(SDL_Init( SDL_INIT_VIDEO ) < 0)
     {
-        printf( "SDL could not initialize! %s\n", SDL_GetError() );
+        printf("SDL could not initialize! %s\n", SDL_GetError());
         exit(1);
     }
     //Create window
-    window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
-    if( window == NULL )
+    window = SDL_CreateWindow("Terrain", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if(window == NULL)
     {
-        printf( "Window could not be created! %s\n", SDL_GetError() );
+        printf("Window could not be created! %s\n", SDL_GetError());
         exit(1);
     }
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    while (!quit){
+    while (!quit)
+    {
         checkButtons(&e, &quit, &rot);
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer, 0x0, 0xFF, 0x0, 0xFF);
-        
-        for (i = 0; i < lines; ++i)
-        {
-            getCoords(coords, mesh, connect, i, rot, inclination);
-            
-            SDL_RenderDrawLine(renderer, coords[0], coords[1], coords[2], coords[3]);
-        }
-        
-        SDL_RenderPresent(renderer);
-        
-        ++i;
+        render(renderer, lines, mesh, connect, rot, inclination);
     }
     
-    for (i = 0; i < 64; ++i)
-        free(mesh[i]);
-    free(mesh);
-    
-    for (i = 0; i < 112; ++i)
-        free(connect[i]);
-    free(connect);
+    cleanUp(mesh, connect);
     
     SDL_DestroyWindow( window );
     

@@ -12,6 +12,103 @@
 #include <string>
 #include "loading.hpp"
 
+void freeHL(height_t *head)
+{
+    for (; head; head = head->next)
+        free(head);
+}
+
+int *newLoad(char *name, int *fwidth, int *fheight)
+{
+    using namespace std;
+    ifstream infile;
+    int numHeights = 0, width = 0, height = 0, prevWidth = 0;
+    string line;
+    char *cline, *token;
+    height_t *head = (height_t *)malloc(sizeof(height_t)), *tmp = head;
+    int *ret, it;
+    
+    if (!head)
+    {
+        printf("Could not malloc for heights!");
+        exit(1);
+    }
+    
+    infile.open(name, ios::in);
+    
+    if (!infile)
+    {
+        printf("%s is not a valid input file!\n", name);
+        freeHL(head);
+        exit(1);
+    }
+    
+    printf("Loading heights from file '%s'... ", name);
+    
+    while (getline(infile, line))
+    {
+        ++height;
+        width = 0;
+        cline = new char[line.length() + 1];
+        strcpy(cline, line.c_str());
+        token = strtok(cline, " ");
+        while (token)
+        {
+            ++width;
+            if (tmp != head)
+            {
+                tmp->next = (height_t *)malloc(sizeof(height_t));
+                if (!tmp->next)
+                {
+                    printf("Could not malloc space for heights!");
+                    freeHL(head);
+                    exit(1);
+                }
+                tmp = tmp->next;
+            }
+            tmp->val = atoi(token);
+            ++numHeights;
+            token = strtok(cline, " ");
+        }
+        delete [] cline;
+        
+        if (height == 1)
+            prevWidth = width;
+        else if (width != prevWidth)
+        {
+            printf("Mesh is not a rectangle!");
+            freeHL(head);
+            exit(1);
+        }
+    }
+    tmp->next = NULL;
+    if (height == 0)
+    {
+        printf("No data in file!");
+        freeHL(head);
+        exit(1);
+    }
+    
+    ret = (int *)malloc(sizeof(int) * width * height);
+    if (!ret)
+    {
+        printf("Could not malloc for heights!");
+        freeHL(head);
+        exit(1);
+    }
+    
+    for (tmp = head, it = 0; tmp; tmp = tmp->next, ++it)
+    {
+        ret[it] = tmp->val;
+    }
+    
+    freeHL(head);
+    
+    *fwidth = width;
+    *fheight = height;
+    return (ret);
+}
+
 void loadHeights(int *nheights, char *name)
 {
     using namespace std;
