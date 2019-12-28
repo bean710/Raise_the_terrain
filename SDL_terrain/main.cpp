@@ -2,91 +2,33 @@
 #include <stdio.h>
 #include "loading.hpp"
 
-void checkButtons(SDL_Event *e, bool* quit, int *rot)
-{
-    while (SDL_PollEvent(e)){
-        if (e->type == SDL_QUIT){
-            *quit = true;
-        }
-        else if(e->type == SDL_KEYDOWN)
-        {
-            switch(e->key.keysym.sym)
-            {
-                case SDLK_LEFT:
-                    *rot -= 20;
-                    break;
-                    
-                case SDLK_RIGHT:
-                    *rot += 20;
-                    break;
-                    
-                case SDLK_q:
-                    *quit = true;
-                    break;
-                    
-                default:
-                    break;
-            }
-        }
-    }
-}
-
-void cleanUp(int **mesh, int **connect)
-{
-    int i;
-    
-    for (i = 0; i < 64; ++i)
-        free(mesh[i]);
-    free(mesh);
-    
-    for (i = 0; i < 112; ++i)
-        free(connect[i]);
-    free(connect);
-}
-
-void render(SDL_Renderer *renderer, int lines, int **mesh, int **connect, int rot, float inclination)
-{
-    int i, coords[4];
-    
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 0x0, 0xFF, 0x0, 0xFF);
-    
-    for (i = 0; i < lines; ++i)
-    {
-        getCoords(coords, mesh, connect, i, rot, inclination);
-        
-        SDL_RenderDrawLine(renderer, coords[0], coords[1], coords[2], coords[3]);
-    }
-    
-    SDL_RenderPresent(renderer);
-}
-
-int main( int argc, char** args )
+int main(int argc, char** args)
 {
     using namespace std;
     SDL_Window* window = NULL;
     SDL_Renderer *renderer = NULL;
     SDL_Event e;
     int **mesh, **connect;
-    int nheights[64];
-    int lines = 112, rot = 0;
+    int *nheights;
+    int width, height;
+    int lines, rot = 0;
     float inclination = 0.7;
     bool quit = false;
     
     if (argc != 2)
     {
-        printf("Incorrect usage. Usage: terrain file\n");
+        printf("Incorrect number of arguments. Usage: terrain file\n");
         exit(1);
     }
     
-    loadHeights(nheights, args[1]);
+    nheights = newLoad(args[1], &width, &height);
+    lines = width * height * 2 - width - height;
     
-    mesh = (int **)malloc(sizeof(int *) * 64);
-    loadMesh(mesh, nheights);
+    mesh = (int **)malloc(sizeof(int *) * width * height);
+    loadMesh(mesh, nheights, width, height);
     
     connect = (int **)malloc(sizeof(int *) * lines);
-    loadConnections(connect);
+    loadConnections(connect, width, height);
     
     printf("Now running SDL...\n");
     
@@ -110,9 +52,9 @@ int main( int argc, char** args )
         render(renderer, lines, mesh, connect, rot, inclination);
     }
     
-    cleanUp(mesh, connect);
+    cleanUp(mesh, connect, width * height, lines);
     
-    SDL_DestroyWindow( window );
+    SDL_DestroyWindow(window);
     
     SDL_Quit();
     

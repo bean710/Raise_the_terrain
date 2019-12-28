@@ -25,7 +25,7 @@ int *newLoad(char *name, int *fwidth, int *fheight)
     int numHeights = 0, width = 0, height = 0, prevWidth = 0;
     string line;
     char *cline, *token;
-    height_t *head = (height_t *)malloc(sizeof(height_t)), *tmp = head;
+    height_t *head = (height_t *)malloc(sizeof(height_t)), *tmp = head, *prev = head;
     int *ret, it;
     
     if (!head)
@@ -39,12 +39,13 @@ int *newLoad(char *name, int *fwidth, int *fheight)
     if (!infile)
     {
         printf("%s is not a valid input file!\n", name);
-        freeHL(head);
+        free(head);
         exit(1);
     }
     
     printf("Loading heights from file '%s'... ", name);
     
+    printf("\n");
     while (getline(infile, line))
     {
         ++height;
@@ -55,36 +56,38 @@ int *newLoad(char *name, int *fwidth, int *fheight)
         while (token)
         {
             ++width;
-            if (tmp != head)
-            {
-                tmp->next = (height_t *)malloc(sizeof(height_t));
-                if (!tmp->next)
-                {
-                    printf("Could not malloc space for heights!");
-                    freeHL(head);
-                    exit(1);
-                }
-                tmp = tmp->next;
-            }
             tmp->val = atoi(token);
+            printf("%4s ", token);
+            tmp->next = (height_t *)malloc(sizeof(height_t));
+            if (!tmp->next)
+            {
+                printf("Could not malloc space for heights!\n");
+                freeHL(head);
+                exit(1);
+            }
+            prev = tmp;
+            tmp = tmp->next;
             ++numHeights;
-            token = strtok(cline, " ");
+            token = strtok(NULL, " ");
         }
+        printf("\n");
         delete [] cline;
         
         if (height == 1)
             prevWidth = width;
         else if (width != prevWidth)
         {
-            printf("Mesh is not a rectangle!");
+            printf("Mesh is not a rectangle!\n");
+            tmp->next = NULL;
             freeHL(head);
             exit(1);
         }
     }
-    tmp->next = NULL;
+    free(tmp);
+    prev->next = NULL;
     if (height == 0)
     {
-        printf("No data in file!");
+        printf("No data in file!\n");
         freeHL(head);
         exit(1);
     }
@@ -92,18 +95,22 @@ int *newLoad(char *name, int *fwidth, int *fheight)
     ret = (int *)malloc(sizeof(int) * width * height);
     if (!ret)
     {
-        printf("Could not malloc for heights!");
+        printf("Could not malloc for heights!\n");
         freeHL(head);
         exit(1);
     }
     
+    printf("Vals:");
     for (tmp = head, it = 0; tmp; tmp = tmp->next, ++it)
     {
         ret[it] = tmp->val;
+        printf("%d ", ret[it]);
     }
+    printf("\n");
     
     freeHL(head);
     
+    printf("Width: %d\nHeight: %d\n", width, height);
     *fwidth = width;
     *fheight = height;
     return (ret);
@@ -134,8 +141,12 @@ void loadHeights(int *nheights, char *name)
     printf("Done!\n");
 }
 
-void loadMesh(int **mesh, int *nheights)
+void loadMesh(int **mesh, int *nheights, int width, int height)
 {
+    int total = width * height;
+    int maxdim = (width > height ? width : height);
+    int i;
+    
     printf("Creating mesh points... ");
 
     if (mesh == NULL)
@@ -144,7 +155,7 @@ void loadMesh(int **mesh, int *nheights)
         exit(1);
     }
     
-    for (int i = 0; i < 64; ++i)
+    for (i = 0; i < total; ++i)
     {
         mesh[i] = (int *)malloc(sizeof(int) * 3);
         
@@ -155,38 +166,44 @@ void loadMesh(int **mesh, int *nheights)
         }
     }
     
-    for (int a = 0; a < 8; ++a)
+    printf("%d\n", i);
+    printf("\n");
+    for (int a = 0; a < width; ++a)
     {
-        for (int b = 0; b < 8; ++b)
+        for (int b = 0; b < height; ++b)
         {
-            mesh[a * 8 + b][0] = 50 * a - 175;
-            mesh[a * 8 + b][1] = 50 * b - 175;
-            mesh[a * 8 + b][2] = nheights[b * 8 + a] / 2 - 150;
+            printf("ArrLoc: %d\n", a * height + b);
+            mesh[a * height + b][0] = (50/8.0 * maxdim) * a - 175;
+            mesh[a * height + b][1] = (50/8.0 * maxdim) * b - 175;
+            mesh[a * height + b][2] = nheights[b * width + a] / 2 - 150;
+            printf("a: %4d b: %4d Z: %4d\n", a, b, (mesh[a * height + b][2] + 150) * 2);
         }
     }
     printf("Done!\n");
 }
 
-void loadConnections(int **connect)
+void loadConnections(int **connect, const int width, const int height)
 {
+    int total = width * height * 2 - width - height;
+    
     printf("Generating line coordinates... ");
-    for (int i = 0; i < 112; ++i)
+    for (int i = 0; i < total; ++i)
         connect[i] = (int *)malloc(sizeof(int) * 2);
     
-    for (int a = 0, it = 0; a < 8; ++a)
+    for (int a = 0, it = 0; a < width; ++a)
     {
-        for (int b = 0; b < 8; ++b)
+        for (int b = 0; b < height; ++b)
         {
             if (b - 1 >= 0)
             {
-                connect[it][0] = (a * 8) + b - 1;
-                connect[it][1] = (a * 8) + b;
+                connect[it][0] = (a * height) + b - 1;
+                connect[it][1] = (a * height) + b;
                 ++it;
             }
             if (a - 1 >= 0)
             {
-                connect[it][0] = ((a - 1) * 8) + b;
-                connect[it][1] = (a * 8) + b;
+                connect[it][0] = ((a - 1) * height) + b;
+                connect[it][1] = (a * height) + b;
                 ++it;
             }
         }
