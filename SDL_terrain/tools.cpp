@@ -10,6 +10,8 @@
 #include <SDL2/SDL.h>
 #include "loading.hpp"
 
+#define ROTATION_SPEED 20
+
 void checkButtons(SDL_Event *e, bool* quit, int *rot)
 {
     while (SDL_PollEvent(e)){
@@ -21,11 +23,11 @@ void checkButtons(SDL_Event *e, bool* quit, int *rot)
             switch (e->key.keysym.sym)
             {
                 case SDLK_LEFT:
-                    *rot = -20;
+                    *rot = -ROTATION_SPEED;
                     break;
                     
                 case SDLK_RIGHT:
-                    *rot = 20;
+                    *rot = ROTATION_SPEED;
                     break;
                     
                 case SDLK_q:

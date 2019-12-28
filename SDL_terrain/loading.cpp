@@ -100,17 +100,17 @@ int *newLoad(char *name, int *fwidth, int *fheight)
         exit(1);
     }
     
-    printf("Vals:");
+    //printf("Vals:");
     for (tmp = head, it = 0; tmp; tmp = tmp->next, ++it)
     {
         ret[it] = tmp->val;
-        printf("%d ", ret[it]);
+        //printf("%d ", ret[it]);
     }
-    printf("\n");
+    //printf("\n");
     
     freeHL(head);
     
-    printf("Width: %d\nHeight: %d\n", width, height);
+    //printf("Width: %d\nHeight: %d\n", width, height);
     *fwidth = width;
     *fheight = height;
     return (ret);
@@ -166,17 +166,17 @@ void loadMesh(int **mesh, int *nheights, int width, int height)
         }
     }
     
-    printf("%d\n", i);
-    printf("\n");
+    //printf("%d\n", i);
+    //printf("\n");
     for (int a = 0; a < width; ++a)
     {
         for (int b = 0; b < height; ++b)
         {
-            printf("ArrLoc: %d\n", a * height + b);
-            mesh[a * height + b][0] = (50/8.0 * maxdim) * a - 175;
-            mesh[a * height + b][1] = (50/8.0 * maxdim) * b - 175;
+            //printf("ArrLoc: %d\n", a * height + b);
+            mesh[a * height + b][0] = (50) * a - (21.875 * width);
+            mesh[a * height + b][1] = (50) * b - (21.875 * height);
             mesh[a * height + b][2] = nheights[b * width + a] / 2 - 150;
-            printf("a: %4d b: %4d Z: %4d\n", a, b, (mesh[a * height + b][2] + 150) * 2);
+            //printf("a: %4d b: %4d Z: %4d\n", a, b, (mesh[a * height + b][2] + 150) * 2);
         }
     }
     printf("Done!\n");
