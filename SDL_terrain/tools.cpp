@@ -16,22 +16,35 @@ void checkButtons(SDL_Event *e, bool* quit, int *rot)
         if (e->type == SDL_QUIT){
             *quit = true;
         }
-        else if(e->type == SDL_KEYDOWN)
+        else if (e->type == SDL_KEYDOWN)
         {
-            switch(e->key.keysym.sym)
+            switch (e->key.keysym.sym)
             {
                 case SDLK_LEFT:
-                    *rot -= 20;
+                    *rot = -20;
                     break;
                     
                 case SDLK_RIGHT:
-                    *rot += 20;
+                    *rot = 20;
                     break;
                     
                 case SDLK_q:
                     *quit = true;
                     break;
                     
+                default:
+                    break;
+            }
+        }
+        else if (e->type == SDL_KEYUP)
+        {
+            switch (e->key.keysym.sym)
+            {
+                case SDLK_LEFT:
+                case SDLK_RIGHT:
+                    *rot = 0;
+                    break;
+                
                 default:
                     break;
             }

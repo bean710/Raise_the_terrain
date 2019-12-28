@@ -11,7 +11,7 @@ int main(int argc, char** args)
     int **mesh, **connect;
     int *nheights;
     int width, height;
-    int lines, rot = 0;
+    int lines, rot = 0, rotStat = 0;
     float inclination = 0.7;
     bool quit = false;
     
@@ -48,7 +48,8 @@ int main(int argc, char** args)
 
     while (!quit)
     {
-        checkButtons(&e, &quit, &rot);
+        checkButtons(&e, &quit, &rotStat);
+        rot += rotStat;
         render(renderer, lines, mesh, connect, rot, inclination);
     }
     
